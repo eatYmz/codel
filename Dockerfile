@@ -10,8 +10,6 @@ COPY ./backend/graph/schema.graphqls ../backend/graph/
 
 COPY frontend/ .
 
-# --production=false is required because we want to install the @graphql-codegen/cli package (and it's in the devDependencies)
-# https://classic.yarnpkg.com/lang/en/docs/cli/install/#toc-yarn-install-production-true-false
 RUN yarn install --frozen-lockfile --production=false
 RUN ls -la /frontend
 RUN yarn build
@@ -36,7 +34,18 @@ COPY --from=be-build /app /app
 COPY --from=fe-build /frontend/dist /fe
 
 # Install sqlite3
-
 RUN apk add --no-cache sqlite
 
-CMD /app
+# Set environment variables
+ENV OPEN_AI_KEY=your_open_ai_key
+ENV OPEN_AI_MODEL=gpt-4-0125-preview
+ENV OLLAMA_MODEL=llama2
+
+# Expose the necessary port
+EXPOSE 3000
+
+# Set up volume binding
+VOLUME /var/run/docker.sock:/var/run/docker.sock
+
+# Final command to run the application
+CMD ["sh", "-c", "docker run -p 3000:8080 -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/semanser/codel:latest"]
